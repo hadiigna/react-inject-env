@@ -1,6 +1,7 @@
 import { CommandLineAction, CommandLineStringParameter } from '@rushstack/ts-command-line'
 import { outputEnvFile } from '../utils/File'
 import { retrieveDotEnvCfg, retrieveReactEnvCfg } from '../utils/Utils'
+import fs from 'fs'
 
 export class SetAction extends CommandLineAction {
   private _dir!: CommandLineStringParameter
@@ -63,6 +64,22 @@ export class SetAction extends CommandLineAction {
 
   protected async onExecute(): Promise<void> {
     const envCfg = { ...retrieveDotEnvCfg(), ...retrieveReactEnvCfg() }
-    outputEnvFile(this.dir, this.fileName, envCfg, this.varName)
+    const hashedFileName = outputEnvFile(this.dir, this.fileName, envCfg, this.varName)
+
+    const indexHtmlFile = `${this.dir}/index.html`
+    fs.readFile(indexHtmlFile, 'utf-8', (err, contents) => {
+      if (err) {
+        console.log(err)
+        throw new Error('cannot read index.html file: ' + err.message)
+      }
+
+      const replaced = contents.replace(this.fileName, hashedFileName)
+
+      fs.writeFile(indexHtmlFile, replaced, 'utf-8', (err) => {
+        if (err) {
+          throw new Error('failed to rewrite index.html file: ' + err.message)
+        }
+      })
+    })
   }
 }

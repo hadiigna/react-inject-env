@@ -3,6 +3,7 @@ import shell from 'shelljs'
 import { Cfg } from '../app/Config'
 import { retrieveDotEnvCfg, retrieveReactEnvCfg } from './Utils'
 import { writeFileSync } from 'fs'
+import crypto from 'crypto';
 
 function generateFromTo(envCfg: Record<string, string>): {
   from: string[] | RegExp[]
@@ -16,6 +17,20 @@ function generateFromTo(envCfg: Record<string, string>): {
     from: from,
     to: to
   }
+}
+
+function getMd5ShortHash(contents: string): string {
+  let hash = crypto.createHash('md5')
+  hash.update(contents)
+  const finalHash = hash.digest('hex')
+
+  return finalHash.substring(0, 7);
+}
+
+function appendToFilename(filename: string, stringToAppend: string): string {
+  const dotIndex = filename.lastIndexOf('.')
+  if (dotIndex == -1) return filename + stringToAppend
+  else return filename.substring(0, dotIndex) + stringToAppend + filename.substring(dotIndex)
 }
 
 export function copyFolder(dir: string, copyDir: string): string {
@@ -45,9 +60,15 @@ export function replaceFilesInDir(dir: string) {
   replaceFile(dir, envCfg)
 }
 
-export function outputEnvFile(folder: string, fileName: string, envCfg: Record<string, string>, varName: string) {
+export function outputEnvFile(folder: string, fileName: string, envCfg: Record<string, string>, varName: string): string {
   shell.mkdir('-p', './build')
   console.info('Setting the following environment variables:')
   console.info(envCfg)
-  writeFileSync(`${folder}/${fileName}`, `window.${varName} = ${JSON.stringify(envCfg, null, 2)}`)
+  let envJson = JSON.stringify(envCfg, null, 2)
+  let hash = getMd5ShortHash(envJson)
+  let hashedFileName = appendToFilename(fileName, `.${hash}.`)
+  writeFileSync(`${folder}/${hashedFileName}`, `window.${varName} = ${envJson}`)
+
+  // Return hashed filename
+  return hashedFileName
 }
