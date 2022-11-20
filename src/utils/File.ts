@@ -66,7 +66,7 @@ export function outputEnvFile(folder: string, fileName: string, envCfg: Record<s
   console.info(envCfg)
   let envJson = JSON.stringify(envCfg, null, 2)
   let hash = getMd5ShortHash(envJson)
-  let hashedFileName = appendToFilename(fileName, `.${hash}.`)
+  let hashedFileName = appendToFilename(fileName, `.${hash}`)
   writeFileSync(`${folder}/${hashedFileName}`, `window.${varName} = ${envJson}`)
 
   // Return hashed filename
