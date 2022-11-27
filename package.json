@@ -11,6 +11,7 @@
   },
   "scripts": {
     "prepublish": "tsc --incremental false",
+    "prepack": "tsc --incremental false",
     "compile": "tsc --noEmit && eslint src/**/*.ts tests/**/*.ts index.ts",
     "test": "jest",
     "test:coverage": "jest --collectCoverage",

@@ -25,6 +25,13 @@ export class SetAction extends CommandLineAction {
     return this._varName.value!
   }
 
+  private _varPrefix!: CommandLineStringParameter
+  get varPrefix(): string {
+    // --var has a default value of 'varPrefix'
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    return this._varPrefix.value!
+  }
+
   protected onDefineParameters(): void {
     this._dir = this.defineStringParameter({
       description: 'Specify the location of your build folder',
@@ -52,6 +59,15 @@ export class SetAction extends CommandLineAction {
       defaultValue: 'env',
       required: false,
     })
+
+    this._varPrefix = this.defineStringParameter({
+      description: 'Specify the prefix of the environment variable applicable for load',
+      parameterLongName: '--prefix',
+      parameterShortName: '-p',
+      argumentName: 'ENV_VAR_PREFIX',
+      defaultValue: 'REACT_APP_',
+      required: false,
+    })
   }
 
   public constructor() {
@@ -63,7 +79,7 @@ export class SetAction extends CommandLineAction {
   }
 
   protected async onExecute(): Promise<void> {
-    const envCfg = { ...retrieveDotEnvCfg(), ...retrieveReactEnvCfg() }
+    const envCfg = { ...retrieveDotEnvCfg(this.varPrefix), ...retrieveReactEnvCfg(this.varPrefix) }
     const hashedFileName = outputEnvFile(this.dir, this.fileName, envCfg, this.varName)
 
     const indexHtmlFile = `${this.dir}/index.html`
